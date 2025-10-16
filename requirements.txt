@@ -1,0 +1,57 @@
+# Core dependencies
+langchain
+langchain-community
+langchain-core
+langchain-openai
+
+raganything
+unstructured[pdf]
+unstructured[local-inference]
+pymupdf
+pypdf2
+pdfplumber
+
+# Vector databases and embeddings
+pgvector
+psycopg2-binary
+supabase
+sentence-transformers
+chromadb
+
+# LightRAG dependencies
+lightrag
+faiss-cpu
+
+# Data processing
+pandas
+numpy
+pydantic
+python-dotenv
+
+# GPU acceleration
+torch
+torchvision
+transformers
+accelerate
+
+# Database and storage
+sqlalchemy
+alembic
+
+# Utilities
+tqdm
+loguru
+python-multipart
+fastapi
+uvicorn
+
+# Legal document processing
+spacy
+nltk
+textstat
+
+# Monitoring and logging
+tensorboard
+psutil
+GPUtil
+pynvml

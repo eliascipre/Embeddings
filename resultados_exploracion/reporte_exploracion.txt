@@ -1,0 +1,63 @@
+================================================================================
+REPORTE DE EXPLORACIÓN DE CARPETA SIEM
+================================================================================
+Fecha de análisis: 2025-10-17 11:15:24
+Ruta analizada: /home/elias/Documentos/Embeddings/SIEM
+
+RESUMEN GENERAL:
+- Total de archivos procesados: 1341
+- Tipos de archivo encontrados: 4
+
+ESTADÍSTICAS POR TIPO DE ARCHIVO:
+- .TXT: 1 archivos, 0.06 MB total, 0.06 MB promedio
+- .DOCX: 197 archivos, 401.27 MB total, 2.04 MB promedio
+- .PDF: 1066 archivos, 2292.62 MB total, 2.15 MB promedio
+- .DOC: 77 archivos, 19.96 MB total, 0.26 MB promedio
+
+RESUMEN POR CATEGORÍA:
+- ANAM: Administración Nacional de Aduanas de México
+  * Archivos: 36
+  * Tamaño total: 938.18 MB
+  * Tipos: {'.docx': 13, '.pdf': 23}
+
+- AWB: Air Waybill - Conocimientos de Embarque Aéreo
+  * Archivos: 3
+  * Tamaño total: 2.14 MB
+  * Tipos: {'.pdf': 3}
+
+- BL: Bill of Lading - Conocimientos de Embarque Marítimo
+  * Archivos: 244
+  * Tamaño total: 1056.15 MB
+  * Tipos: {'.docx': 13, '.pdf': 193, '.doc': 38}
+
+- CP: Código Penal
+  * Archivos: 202
+  * Tamaño total: 353.7 MB
+  * Tipos: {'.pdf': 164, '.doc': 38}
+
+- Marco_jurídico: Marco jurídico general
+  * Archivos: 1098
+  * Tamaño total: 1541.33 MB
+  * Tipos: {'.docx': 183, '.pdf': 876, '.doc': 39}
+
+- Certificado_CAM: Certificados CAM
+  * Archivos: 1
+  * Tamaño total: 0.19 MB
+  * Tipos: {'.pdf': 1}
+
+- convencion_viena: Convención de Viena
+  * Archivos: 1
+  * Tamaño total: 0.06 MB
+  * Tipos: {'.pdf': 1}
+
+ARCHIVOS MÁS GRANDES:
+ 1. DOF_300620_Reglas_Comercio_Exterior_2020.pdf - 177.75 MB
+ 2. DOF_241221_Reglas_Comercio_Exterior_2022.pdf - 175.99 MB
+ 3. DOF_300620_Reglas_Comercio_Exterior_2020.docx - 121.73 MB
+ 4. DOF_241221_Reglas_Comercio_Exterior_2022.docx - 84.42 MB
+ 5. Reglamentación uniformes referentes a la interpretacion.pdf - 59.63 MB
+ 6. TLC_panamá.pdf - 57.73 MB
+ 7. Panama.pdf - 57.68 MB
+ 8. DOF_240619_Reglas_Comercio_Exterior_2019.docx - 28.06 MB
+ 9. DOF_181217_Reglas_Comercio_Exterior_2018.docx - 26.6 MB
+10. Decisi_n_No._8_Modificaciones_Anexo_4.3_RO.docx - 15.82 MB

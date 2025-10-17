@@ -190,9 +190,7 @@ $RECYCLE.BIN/
 *~
 
 # Project specific
-# Logs
 *.log
-logs/
 performance_*.log
 legal_rag_*.log
 
@@ -214,7 +212,7 @@ runs/
 *.db
 *.sqlite
 *.sqlite3
-
+SIEM/ 
 # Configuration files with sensitive data
 config/secrets.yaml
 config/local.yaml

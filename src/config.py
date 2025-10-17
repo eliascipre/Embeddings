@@ -1,5 +1,5 @@
 """
-Configuración del sistema de embeddings legales
+Configuración unificada del sistema RAG optimizado con Hugging Face A100
 """
 import os
 from pathlib import Path
@@ -11,62 +11,80 @@ from dotenv import load_dotenv
 # Cargar variables de entorno
 load_dotenv()
 
-class LegalRAGConfig(BaseSettings):
-    """Configuración del sistema RAG Legal"""
+class OptimizedRAGConfig(BaseSettings):
+    """Configuración optimizada para RAG masivo con Hugging Face A100"""
+    
+    # Hugging Face Configuration
+    hf_token: str = Field(default="", description="Token de Hugging Face")
+    hf_api_url: str = Field(
+        default="https://wfuosp4mnqkimde9.us-east-1.aws.endpoints.huggingface.cloud",
+        description="URL de la API de Hugging Face"
+    )
     
     # Supabase Configuration
-    supabase_url: str = Field(default="https://zcxqxrgtmnfixkgeaurj.supabase.co")
-    supabase_key: str = Field(default="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjeHF4cmd0bW5maXhrZ2VhdXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTk4MTgsImV4cCI6MjA3NjE5NTgxOH0.YqseZLeQDohHdc-s9QduefPqy5SOSyWJysK_q8cMtio")
-    supabase_service_key: Optional[str] = Field(default=None)
-    
-    # Database Configuration
-    database_url: str = Field(default="postgresql://postgres:password@localhost:5432/legal_embeddings")
-    pgvector_extension: str = Field(default="vector")
-    
-    # OpenAI Configuration (para RAG-Anything)
-    openai_api_key: Optional[str] = Field(default=None)
-    openai_base_url: Optional[str] = Field(default=None)
-    
-    # Embedding Model Configuration
-    embedding_model: str = Field(default="Qwen/Qwen3-Embedding-0.6B")
-    embedding_device: str = Field(default="cuda")
-    embedding_dimensions: int = Field(default=1024)
-    
-    # RAG Configuration
-    chunk_size: int = Field(default=1200)
-    chunk_overlap: int = Field(default=200)
-    batch_size: int = Field(default=100)
-    similarity_threshold: float = Field(default=0.7)
-    
-    # GPU Configuration
-    cuda_visible_devices: str = Field(default="0")
-    torch_device: str = Field(default="cuda")
-    
-    # Logging Configuration
-    log_level: str = Field(default="INFO")
-    log_file: str = Field(default="logs/legal_rag.log")
+    supabase_url: str = Field(
+        default="https://zcxqxrgtmnfixkgeaurj.supabase.co",
+        description="URL de Supabase"
+    )
+    supabase_key: str = Field(
+        default="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjeHF4cmd0bW5maXhrZ2VhdXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTk4MTgsImV4cCI6MjA3NjE5NTgxOH0.YqseZLeQDohHdc-s9QduefPqy5SOSyWJysK_q8cMtio",
+        description="Clave de Supabase"
+    )
     
     # Processing Configuration
-    max_documents: int = Field(default=10000)
-    parallel_workers: int = Field(default=4)
-    cache_dir: str = Field(default="./cache")
+    max_workers: int = Field(default=8, description="Número máximo de workers paralelos")
+    batch_size: int = Field(default=50, description="Tamaño del lote para procesamiento")
+    hf_batch_size: int = Field(default=32, description="Tamaño del lote para Hugging Face")
+    max_concurrent_requests: int = Field(default=50, description="Máximo de requests concurrentes a HF")
+    
+    # Chunking Configuration
+    chunk_size: int = Field(default=1200, description="Tamaño de chunk")
+    chunk_overlap: int = Field(default=200, description="Solapamiento entre chunks")
+    
+    # Search Configuration
+    default_top_k: int = Field(default=20, description="Número por defecto de resultados")
+    vector_weight: float = Field(default=0.7, description="Peso para búsqueda vectorial")
+    keyword_weight: float = Field(default=0.3, description="Peso para búsqueda por palabras clave")
+    match_threshold: float = Field(default=0.6, description="Umbral de similitud")
+    
+    # Database Configuration
+    supabase_batch_size: int = Field(default=1000, description="Tamaño de lote para Supabase")
+    
+    # Logging Configuration
+    log_level: str = Field(default="INFO", description="Nivel de logging")
+    log_file: str = Field(default="massive_processing.log", description="Archivo de log")
     
     # Paths
     project_root: Path = Field(default=Path(__file__).parent.parent)
     data_dir: Path = Field(default=Path(__file__).parent.parent / "data")
     logs_dir: Path = Field(default=Path(__file__).parent.parent / "logs")
-    cache_directory: Path = Field(default=Path(__file__).parent.parent / "cache")
+    cache_dir: Path = Field(default=Path(__file__).parent.parent / "cache")
+    
+    # Performance Configuration
+    timeout: int = Field(default=300, description="Timeout para requests")
+    retry_attempts: int = Field(default=3, description="Intentos de reintento")
+    retry_delay: float = Field(default=1.0, description="Delay entre reintentos")
     
     model_config = {
         "env_file": ".env",
         "case_sensitive": False,
-        "extra": "ignore"  # Ignorar campos extra
+        "extra": "ignore"
     }
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Crear directorios necesarios
+        self.data_dir.mkdir(exist_ok=True)
+        self.logs_dir.mkdir(exist_ok=True)
+        self.cache_dir.mkdir(exist_ok=True)
 
 # Instancia global de configuración
-config = LegalRAGConfig()
+config = OptimizedRAGConfig()
 
-# Crear directorios necesarios
-config.data_dir.mkdir(exist_ok=True)
-config.logs_dir.mkdir(exist_ok=True)
-config.cache_directory.mkdir(exist_ok=True)
+# Configurar variables de entorno si no están definidas
+if not config.hf_token:
+    config.hf_token = os.getenv("HF_TOKEN", "")
+if not config.supabase_url:
+    config.supabase_url = os.getenv("SUPABASE_URL", config.supabase_url)
+if not config.supabase_key:
+    config.supabase_key = os.getenv("SUPABASE_KEY", config.supabase_key)

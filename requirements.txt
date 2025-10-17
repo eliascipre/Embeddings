@@ -1,57 +1,72 @@
-# Core dependencies
-langchain
-langchain-community
-langchain-core
-langchain-openai
+# Core dependencies para sistema RAG optimizado
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-core>=0.1.0
+langchain-openai>=0.0.5
 
-raganything
-unstructured[pdf]
-unstructured[local-inference]
-pymupdf
-pypdf2
-pdfplumber
+# Document processing
+unstructured[pdf]>=0.11.0
+pymupdf>=1.23.0
+pypdf2>=3.0.0
+pdfplumber>=0.10.0
 
 # Vector databases and embeddings
-pgvector
-psycopg2-binary
-supabase
-sentence-transformers
-chromadb
+pgvector>=0.2.0
+psycopg2-binary>=2.9.0
+supabase>=2.0.0
+sentence-transformers>=2.2.0
+chromadb>=0.4.0
 
-# LightRAG dependencies
-lightrag
-faiss-cpu
+# Hugging Face API
+aiohttp>=3.8.0
+requests>=2.31.0
+transformers>=4.30.0
+torch>=2.0.0
+torchvision>=0.15.0
+accelerate>=0.20.0
 
 # Data processing
-pandas
-numpy
-pydantic
-python-dotenv
+pandas>=2.0.0
+numpy>=1.24.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
 
-# GPU acceleration
-torch
-torchvision
-transformers
-accelerate
+# Async processing
+asyncio-throttle>=1.0.0
+aiofiles>=23.0.0
 
 # Database and storage
-sqlalchemy
-alembic
+sqlalchemy>=2.0.0
+alembic>=1.11.0
 
 # Utilities
-tqdm
-loguru
-python-multipart
-fastapi
-uvicorn
+tqdm>=4.65.0
+loguru>=0.7.0
+python-multipart>=0.0.6
+fastapi>=0.100.0
+uvicorn>=0.23.0
 
 # Legal document processing
-spacy
-nltk
-textstat
+spacy>=3.6.0
+nltk>=3.8.0
+textstat>=0.7.0
 
 # Monitoring and logging
-tensorboard
-psutil
-GPUtil
-pynvml
+tensorboard>=2.13.0
+psutil>=5.9.0
+GPUtil>=1.4.0
+pynvml>=11.5.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Optional: LightRAG (si se quiere usar)
+# lightrag>=0.0.1
+
+# Optional: RAG-Anything (si se quiere usar)
+# raganything>=0.0.1

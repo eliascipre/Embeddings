@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+leyes_de_todos_los_estados/
 
 # Distribution / packaging
 .Python

@@ -23,7 +23,7 @@ from unstructured.chunking.title import chunk_by_title
 from unstructured.staging.base import elements_to_json
 
 # LangChain imports
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 
 from config import config

@@ -7,8 +7,8 @@ from typing import Dict, Any
 
 # Configuración de Supabase
 SUPABASE_CONFIG = {
-    'url': 'https://rygrdlradxyykzuudgtu.supabase.co',
-    'api_key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Z3JkbHJhZHh5eWt6dXVkZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTg0MDYsImV4cCI6MjA3NjI5NDQwNn0.ZeFX5rK3kfqupVX_yHKluIsCB1beCfCLsS1fdqEU_10',
+    'url': os.getenv('SUPABASE_URL', 'https://rygrdlradxyykzuudgtu.supabase.co'),
+    'api_key': os.getenv('SUPABASE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Z3JkbHJhZHh5eWt6dXVkZ3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTg0MDYsImV4cCI6MjA3NjI5NDQwNn0.ZeFX5rK3kfqupVX_yHKluIsCB1beCfCLsS1fdqEU_10'),
     'project_id': 'rygrdlradxyykzuudgtu'
 }
 
@@ -19,7 +19,8 @@ DATABASE_CONFIG = {
         'documents': 'siem_documents',
         'chunks': 'siem_chunks',
         'embeddings': 'siem_embeddings',
-        'metadata': 'siem_metadata'
+        'metadata': 'siem_metadata',
+        'processing_logs': 'siem_processing_logs'
     }
 }
 

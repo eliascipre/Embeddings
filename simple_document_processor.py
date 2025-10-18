@@ -59,16 +59,31 @@ class SimpleDocumentProcessor:
             return ""
     
     def _extract_pdf_text(self, file_path: Path) -> str:
-        """Extraer texto de PDF con PyMuPDF"""
+        """Extraer texto de PDF con PyMuPDF optimizado para documentos grandes"""
         try:
             doc = fitz.open(str(file_path))
             text = ""
             
-            for page_num in range(len(doc)):
-                page = doc.load_page(page_num)
-                page_text = page.get_text()
-                if page_text.strip():
-                    text += f"\n--- PÁGINA {page_num + 1} ---\n{page_text}\n"
+            # Procesar páginas en lotes para documentos grandes
+            total_pages = len(doc)
+            batch_size = 10  # Procesar 10 páginas a la vez
+            
+            for batch_start in range(0, total_pages, batch_size):
+                batch_end = min(batch_start + batch_size, total_pages)
+                
+                for page_num in range(batch_start, batch_end):
+                    try:
+                        page = doc.load_page(page_num)
+                        page_text = page.get_text()
+                        if page_text.strip():
+                            text += f"\n--- PÁGINA {page_num + 1} ---\n{page_text}\n"
+                    except Exception as page_error:
+                        logger.warning(f"⚠️ Error en página {page_num + 1}: {page_error}")
+                        continue
+                
+                # Log de progreso para documentos grandes
+                if total_pages > 50:
+                    logger.info(f"📄 Procesadas páginas {batch_start + 1}-{batch_end} de {total_pages}")
             
             doc.close()
             return text
@@ -112,7 +127,7 @@ class SimpleDocumentProcessor:
         return text
     
     def _create_simple_chunks(self, text: str, file_path: Path) -> List[Dict[str, Any]]:
-        """Crear chunks simples dividiendo por caracteres con overlap"""
+        """Crear chunks simples dividiendo por caracteres con overlap optimizado"""
         chunks = []
         
         # Si el texto es menor al tamaño máximo, crear un solo chunk
@@ -125,26 +140,32 @@ class SimpleDocumentProcessor:
                 ))
             return chunks
         
-        # Dividir por caracteres con overlap
+        # Dividir por caracteres con overlap optimizado
         start = 0
         chunk_index = 0
+        text_length = len(text)
         
-        while start < len(text):
+        # Log de progreso para textos muy grandes
+        if text_length > 100000:  # Más de 100KB de texto
+            logger.info(f"📝 Creando chunks para texto de {text_length:,} caracteres")
+        
+        while start < text_length:
             # Calcular el final del chunk
             end = start + self.max_chunk_size
             
             # Si no es el último chunk, buscar un buen punto de corte
-            if end < len(text):
+            if end < text_length:
                 # Buscar el último punto, coma o salto de línea dentro del chunk
                 chunk_text = text[start:end]
                 
-                # Buscar puntos de corte naturales
+                # Buscar puntos de corte naturales (optimizado)
                 cut_points = [
                     chunk_text.rfind('. '),
-                    chunk_text.rfind(', '),
                     chunk_text.rfind('\n'),
+                    chunk_text.rfind(', '),
                     chunk_text.rfind('; '),
-                    chunk_text.rfind(': ')
+                    chunk_text.rfind(': '),
+                    chunk_text.rfind(' '),  # Cualquier espacio como último recurso
                 ]
                 
                 # Usar el mejor punto de corte encontrado
@@ -155,19 +176,24 @@ class SimpleDocumentProcessor:
             # Extraer el chunk
             chunk_text = text[start:end].strip()
             
-            if chunk_text and len(chunk_text) >= 50:  # Mínimo 50 caracteres
+            if chunk_text and len(chunk_text) >= 30:  # Mínimo 30 caracteres (reducido)
                 chunks.append(self._create_chunk_dict(
                     chunk_text, 
                     chunk_index, 
                     file_path
                 ))
                 chunk_index += 1
+                
+                # Log de progreso cada 100 chunks
+                if chunk_index % 100 == 0:
+                    logger.info(f"📝 Creados {chunk_index} chunks...")
             
             # Mover el inicio considerando el overlap
             start = end - self.chunk_overlap
-            if start >= len(text):
+            if start >= text_length:
                 break
         
+        logger.info(f"✅ Total de chunks creados: {len(chunks)}")
         return chunks
     
     def _create_chunk_dict(self, content: str, index: int, file_path: Path) -> Dict[str, Any]:

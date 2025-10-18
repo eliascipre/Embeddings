@@ -42,9 +42,9 @@ class OptimizedGPUEmbeddingClient:
         self.hf_endpoint = hf_endpoint
         self.hf_token = hf_token
         self.batch_size = 32  # Límite máximo de la API de Hugging Face
-        self.max_concurrent_requests = 20  # Aumentado de 10 a 20
+        self.max_concurrent_requests = 25  # Reducido para evitar timeouts
         self.session = None
-        self.semaphore = asyncio.Semaphore(20)  # Control de concurrencia
+        self.semaphore = asyncio.Semaphore(25)  # Control de concurrencia optimizado
         self.stats = {
             'total_requests': 0,
             'total_chunks_processed': 0,
@@ -55,8 +55,8 @@ class OptimizedGPUEmbeddingClient:
     async def __aenter__(self):
         """Context manager entry"""
         self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=60, connect=10),  # Timeout optimizado
-            connector=aiohttp.TCPConnector(limit=100, limit_per_host=20),  # Más conexiones
+            timeout=aiohttp.ClientTimeout(total=120, connect=30),  # Timeout aumentado para documentos grandes
+            connector=aiohttp.TCPConnector(limit=50, limit_per_host=10),  # Menos conexiones para estabilidad
             headers={
                 'Authorization': f'Bearer {self.hf_token}' if self.hf_token else '',
                 'Content-Type': 'application/json'
@@ -70,37 +70,62 @@ class OptimizedGPUEmbeddingClient:
             await self.session.close()
     
     async def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
-        """Generar embeddings para un lote de textos con control de concurrencia"""
+        """Generar embeddings para un lote de textos con control de concurrencia y reintentos"""
         async with self.semaphore:  # Control de concurrencia
-            try:
-                start_time = time.time()
-                
-                payload = {
-                    "inputs": texts,
-                    "parameters": {}
-                }
-                
-                async with self.session.post(self.hf_endpoint, json=payload) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        embeddings = result if isinstance(result, list) else result.get('embeddings', [])
-                        
-                        self.stats['total_requests'] += 1
-                        self.stats['total_chunks_processed'] += len(texts)
-                        self.stats['total_time'] += time.time() - start_time
-                        
-                        logger.info(f"✅ Lote procesado: {len(texts)} chunks en {time.time() - start_time:.2f}s")
-                        return embeddings
+            max_retries = 3
+            retry_delay = 2  # segundos
+            
+            for attempt in range(max_retries):
+                try:
+                    start_time = time.time()
+                    
+                    payload = {
+                        "inputs": texts,
+                        "parameters": {}
+                    }
+                    
+                    async with self.session.post(self.hf_endpoint, json=payload) as response:
+                        if response.status == 200:
+                            result = await response.json()
+                            embeddings = result if isinstance(result, list) else result.get('embeddings', [])
+                            
+                            self.stats['total_requests'] += 1
+                            self.stats['total_chunks_processed'] += len(texts)
+                            self.stats['total_time'] += time.time() - start_time
+                            
+                            logger.info(f"✅ Lote procesado: {len(texts)} chunks en {time.time() - start_time:.2f}s")
+                            return embeddings
+                        else:
+                            error_text = await response.text()
+                            logger.warning(f"⚠️ Error en API (intento {attempt + 1}/{max_retries}): {response.status} - {error_text}")
+                            if attempt < max_retries - 1:
+                                await asyncio.sleep(retry_delay * (attempt + 1))  # Backoff exponencial
+                                continue
+                            else:
+                                self.stats['errors'] += 1
+                                return []
+                            
+                except asyncio.TimeoutError:
+                    logger.warning(f"⚠️ Timeout en intento {attempt + 1}/{max_retries}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay * (attempt + 1))
+                        continue
                     else:
-                        error_text = await response.text()
-                        logger.error(f"❌ Error en API: {response.status} - {error_text}")
+                        logger.error(f"❌ Timeout después de {max_retries} intentos")
                         self.stats['errors'] += 1
                         return []
                         
-            except Exception as e:
-                logger.error(f"❌ Error generando embeddings: {e}")
-                self.stats['errors'] += 1
-                return []
+                except Exception as e:
+                    logger.warning(f"⚠️ Error en intento {attempt + 1}/{max_retries}: {e}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay * (attempt + 1))
+                        continue
+                    else:
+                        logger.error(f"❌ Error después de {max_retries} intentos: {e}")
+                        self.stats['errors'] += 1
+                        return []
+            
+            return []
 
 class OptimizedImmediateSaveRAGSystem:
     """Sistema RAG con guardado inmediato de chunks"""
@@ -111,7 +136,7 @@ class OptimizedImmediateSaveRAGSystem:
         self.hf_endpoint = hf_endpoint
         self.hf_token = hf_token
         self.supabase: Client = None
-        self.document_processor = SimpleDocumentProcessor(max_chunk_size=2000, chunk_overlap=200)
+        self.document_processor = SimpleDocumentProcessor(max_chunk_size=1500, chunk_overlap=150)  # Chunks más pequeños para mejor rendimiento
         self.embedding_client = OptimizedGPUEmbeddingClient(hf_endpoint, hf_token)
         
         # Inicializar automáticamente
@@ -165,8 +190,8 @@ class OptimizedImmediateSaveRAGSystem:
             logger.info("🔄 Procesando documentos en paralelo con guardado inmediato...")
             
             async with self.embedding_client as client:
-                # Procesar en lotes de documentos para paralelismo
-                batch_size = 8  # Procesar 8 documentos en paralelo (optimizado)
+                # Procesar en lotes de documentos para paralelismo (aumentado para documentos grandes)
+                batch_size = 12  # Procesar 12 documentos en paralelo (optimizado para documentos grandes)
                 for batch_start in range(0, len(files), batch_size):
                     batch_end = min(batch_start + batch_size, len(files))
                     batch_files = files[batch_start:batch_end]
@@ -177,8 +202,14 @@ class OptimizedImmediateSaveRAGSystem:
                         task = self._process_single_document(file_path, client, results)
                         tasks.append(task)
                     
-                    # Ejecutar tareas en paralelo
-                    await asyncio.gather(*tasks, return_exceptions=True)
+                    # Ejecutar tareas en paralelo con timeout para evitar bloqueos
+                    try:
+                        await asyncio.wait_for(
+                            asyncio.gather(*tasks, return_exceptions=True),
+                            timeout=300  # 5 minutos de timeout por lote
+                        )
+                    except asyncio.TimeoutError:
+                        logger.warning(f"⚠️ Timeout en lote {batch_start}-{batch_end}, continuando...")
                     
                     logger.info(f"📊 Progreso: {min(batch_end, len(files))}/{len(files)} archivos procesados")
             
@@ -203,13 +234,18 @@ class OptimizedImmediateSaveRAGSystem:
         try:
             logger.info(f"📄 Procesando: {file_path.name}")
             
-            # Verificar si ya existe
+            # Calcular hash del archivo (necesario para todos los casos)
             file_hash = self._calculate_file_hash(file_path)
-            existing_doc = self.supabase.table('siem_documents').select('id').eq('file_hash', file_hash).execute()
+            
+            # Verificar si ya existe (optimizado: solo verificar por nombre de archivo primero)
+            existing_doc = self.supabase.table('siem_documents').select('id,file_hash').eq('file_name', file_path.name).execute()
             
             if existing_doc.data:
-                logger.info(f"⏭️ Saltando {file_path.name} (ya procesado)")
-                return
+                # Verificar si el hash coincide
+                for doc in existing_doc.data:
+                    if doc['file_hash'] == file_hash:
+                        logger.info(f"⏭️ Saltando {file_path.name} (ya procesado)")
+                        return
             
             # Procesar documento
             chunks = self.document_processor.process_document(file_path)
@@ -231,36 +267,21 @@ class OptimizedImmediateSaveRAGSystem:
             document_id = self._save_document(file_path, file_hash, len(chunks))
             logger.info(f"✅ Documento guardado: {file_path.name} (ID: {document_id})")
             
-            # Procesar chunks en lotes y guardar inmediatamente
+            # Procesar chunks con estrategia adaptativa según el tamaño del documento
             chunks_saved = 0
             embeddings_saved = 0
             
-            # Procesar chunks en lotes de 32 (límite de API)
-            chunks_to_save = []
-            embeddings_to_save = []
-            
-            for batch_start in range(0, len(chunks), 32):
-                batch_end = min(batch_start + 32, len(chunks))
-                batch_chunks = chunks[batch_start:batch_end]
-                
-                # Generar embeddings para el lote
-                texts = [chunk['text'] for chunk in batch_chunks]
-                embeddings = await client.generate_embeddings_batch(texts)
-                
-                if embeddings:
-                    # Preparar datos para guardado en lote
-                    for chunk, embedding in zip(batch_chunks, embeddings):
-                        chunk['document_id'] = document_id
-                        chunks_to_save.append(chunk)
-                        embeddings_to_save.append({
-                            'embedding': embedding,
-                            'chunk_text': chunk['text']
-                        })
-            
-            # Guardar todos los chunks y embeddings en lotes
-            if chunks_to_save:
-                chunks_saved, embeddings_saved = await self._save_chunks_and_embeddings_batch(
-                    chunks_to_save, embeddings_to_save, document_id
+            # Estrategia adaptativa: documentos grandes se procesan secuencialmente para evitar timeouts
+            if len(chunks) > 500:  # Documentos muy grandes (>500 chunks)
+                logger.info(f"📊 Documento grande detectado ({len(chunks)} chunks), procesando secuencialmente...")
+                chunks_saved, embeddings_saved = await self._process_large_document_sequentially(
+                    chunks, document_id, client
+                )
+            else:
+                # Documentos normales: procesamiento paralelo
+                logger.info(f"📊 Documento normal ({len(chunks)} chunks), procesando en paralelo...")
+                chunks_saved, embeddings_saved = await self._process_document_parallel(
+                    chunks, document_id, client
                 )
             
             # Actualizar estado del documento
@@ -278,6 +299,90 @@ class OptimizedImmediateSaveRAGSystem:
             logger.error(f"❌ {error_msg}")
             logger.error(f"❌ Traceback: {traceback.format_exc()}")
             results['errors'].append(error_msg)
+    
+    async def _process_chunk_batch(self, batch_chunks: List[Dict], document_id: int, client) -> tuple:
+        """Procesar un lote de chunks de forma asíncrona"""
+        try:
+            # Generar embeddings para el lote
+            texts = [chunk['text'] for chunk in batch_chunks]
+            embeddings = await client.generate_embeddings_batch(texts)
+            
+            if not embeddings:
+                return 0, 0
+            
+            # Preparar datos para guardado
+            chunks_to_save = []
+            embeddings_to_save = []
+            
+            for chunk, embedding in zip(batch_chunks, embeddings):
+                chunk['document_id'] = document_id
+                chunks_to_save.append(chunk)
+                embeddings_to_save.append({
+                    'embedding': embedding,
+                    'chunk_text': chunk['text']
+                })
+            
+            # Guardar en lote
+            chunks_saved, embeddings_saved = await self._save_chunks_and_embeddings_batch(
+                chunks_to_save, embeddings_to_save, document_id
+            )
+            
+            return chunks_saved, embeddings_saved
+            
+        except Exception as e:
+            logger.error(f"❌ Error procesando lote de chunks: {e}")
+            return 0, 0
+    
+    async def _process_large_document_sequentially(self, chunks: List[Dict], document_id: int, client) -> tuple:
+        """Procesar documento grande de forma secuencial para evitar timeouts"""
+        chunks_saved = 0
+        embeddings_saved = 0
+        batch_size = 16  # Lotes más pequeños para documentos grandes
+        
+        for batch_start in range(0, len(chunks), batch_size):
+            batch_end = min(batch_start + batch_size, len(chunks))
+            batch_chunks = chunks[batch_start:batch_end]
+            
+            logger.info(f"📝 Procesando lote {batch_start//batch_size + 1}/{(len(chunks) + batch_size - 1)//batch_size} ({len(batch_chunks)} chunks)")
+            
+            # Procesar lote individual
+            batch_saved, batch_embeddings = await self._process_chunk_batch(batch_chunks, document_id, client)
+            chunks_saved += batch_saved
+            embeddings_saved += batch_embeddings
+            
+            # Pausa entre lotes para evitar sobrecarga
+            if batch_start + batch_size < len(chunks):
+                await asyncio.sleep(1)  # 1 segundo de pausa entre lotes
+        
+        return chunks_saved, embeddings_saved
+    
+    async def _process_document_parallel(self, chunks: List[Dict], document_id: int, client) -> tuple:
+        """Procesar documento normal en paralelo"""
+        chunks_saved = 0
+        embeddings_saved = 0
+        batch_size = 32
+        tasks = []
+        
+        for batch_start in range(0, len(chunks), batch_size):
+            batch_end = min(batch_start + batch_size, len(chunks))
+            batch_chunks = chunks[batch_start:batch_end]
+            
+            # Crear tarea asíncrona para procesar el lote
+            task = self._process_chunk_batch(batch_chunks, document_id, client)
+            tasks.append(task)
+        
+        # Ejecutar todas las tareas en paralelo
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Consolidar resultados
+        for result in batch_results:
+            if isinstance(result, tuple) and len(result) == 2:
+                chunks_saved += result[0]
+                embeddings_saved += result[1]
+            elif isinstance(result, Exception):
+                logger.error(f"❌ Error en lote: {result}")
+        
+        return chunks_saved, embeddings_saved
     
     async def _save_chunks_and_embeddings_batch(self, chunks: List[Dict], embeddings_data: List[Dict], document_id: int) -> tuple:
         """Guardar chunks y embeddings en lotes para mejor rendimiento"""
@@ -394,7 +499,7 @@ async def main():
         )
         
         # Procesar todos los archivos con guardado inmediato optimizado
-        results = await system.process_documents_immediate_save("SIEM/SIEM", max_workers=32)
+        results = await system.process_documents_immediate_save("SIEM", max_workers=32)
         
         logger.info(f"✅ Procesamiento completado: {results}")
         

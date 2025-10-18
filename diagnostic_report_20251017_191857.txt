@@ -1,0 +1,104 @@
+
+# REPORTE DE DIAGNÓSTICO - ARCHIVOS FALLIDOS
+# Generado: 2025-10-17 19:18:57
+
+## RESUMEN GENERAL
+- Total de archivos analizados: 14
+- Archivos encontrados: 12
+- Archivos legibles: 12
+- Archivos con texto extraíble: 0
+- Tasa de éxito: 0.0%
+
+## DIAGNÓSTICOS POR CATEGORÍA
+
+### ARCHIVO_NO_ENCONTRADO (2 archivos)
+- **DOF_1703_22_Circunscripción_Aduanas_mod.pdf**
+  - Tamaño: 0 bytes
+  - Páginas: 0
+  - Texto extraído: 0 caracteres
+  - Recomendación: Verificar que el archivo existe en la carpeta SIEM
+  - Error: Archivo no encontrado en el sistema de archivos
+
+- **DOF_010322_Circunscripción_Aduanas.pdf**
+  - Tamaño: 0 bytes
+  - Páginas: 0
+  - Texto extraído: 0 caracteres
+  - Recomendación: Verificar que el archivo existe en la carpeta SIEM
+  - Error: Archivo no encontrado en el sistema de archivos
+
+
+### PDF_SIN_TEXTO_EXTRAIBLE (12 archivos)
+- **DOF_190122_Vehiculos_procedencia_extr.pdf**
+  - Tamaño: 1,485,479 bytes
+  - Páginas: 3
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_181217_Reglas_Comercio_Exterior_2018.pdf**
+  - Tamaño: 57,144,587 bytes
+  - Páginas: 99
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_240619_Reglas_Comercio_Exterior_2019.pdf**
+  - Tamaño: 60,328,347 bytes
+  - Páginas: 102
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_110621_Reglas_Comercio_Exterior_2021.pdf**
+  - Tamaño: 2,968,181 bytes
+  - Páginas: 6
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_140721_ANAM.pdf**
+  - Tamaño: 2,020,690 bytes
+  - Páginas: 4
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_270222_Vehiculos_procedencia_extr_ref.pdf**
+  - Tamaño: 2,112,543 bytes
+  - Páginas: 5
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_241221_Reglas_Comercio_Exterior_2022.pdf**
+  - Tamaño: 184,541,370 bytes
+  - Páginas: 308
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **Poblalines_ANAM.pdf**
+  - Tamaño: 6,148,064 bytes
+  - Páginas: 96
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_220224_Codigo_de_conducta_ANAM.pdf**
+  - Tamaño: 4,259,780 bytes
+  - Páginas: 8
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_300620_Reglas_Comercio_Exterior_2020.pdf**
+  - Tamaño: 186,389,096 bytes
+  - Páginas: 307
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_210122_Vehiculos_procedencia_extr.pdf**
+  - Tamaño: 74,054 bytes
+  - Páginas: 1
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+- **DOF_211221_Reglamento_ANAM.pdf**
+  - Tamaño: 29,021,546 bytes
+  - Páginas: 51
+  - Texto extraído: 0 caracteres
+  - Recomendación: PDF probablemente escaneado (imagen). Necesita OCR.
+
+
+## ARCHIVOS CON TEXTO EXTRAÍBLE

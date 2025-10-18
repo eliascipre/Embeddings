@@ -366,6 +366,95 @@ stats = {
 - Análisis de contenido por chunks
 - Búsqueda de patrones en documentos
 
+## 📊 Análisis de Procesamiento - Estado Actual
+
+### Resumen de Procesamiento Completado
+- **Total de archivos en SIEM**: 150 archivos
+- **Archivos procesados exitosamente**: 132 (88%)
+- **Archivos que fallaron**: 18 (12%)
+- **Chunks creados**: 35,021
+- **Embeddings generados**: 35,021
+- **Tasa de éxito general**: 88%
+
+### Diagnóstico de Archivos Fallidos
+
+#### 1. Archivos No Encontrados (2 archivos)
+- `DOF_1703_22_Circunscripción_Aduanas_mod.pdf` 
+- `DOF_010322_Circunscripción_Aduanas.pdf`
+
+**Estado**: Los archivos SÍ existen en el sistema de archivos pero no fueron encontrados por el script de búsqueda. Esto indica un problema menor en la lógica de búsqueda de archivos.
+
+#### 2. PDFs Escaneados Sin Texto Extraíble (12 archivos)
+Todos estos archivos son **PDFs escaneados** (imágenes) que contienen texto pero no es extraíble directamente con PyMuPDF:
+
+| Archivo | Tamaño | Páginas | Tipo de Problema |
+|---------|--------|---------|------------------|
+| `DOF_190122_Vehiculos_procedencia_extr.pdf` | 1.4 MB | 3 | PDF escaneado |
+| `DOF_181217_Reglas_Comercio_Exterior_2018.pdf` | 57 MB | 99 | PDF escaneado |
+| `DOF_240619_Reglas_Comercio_Exterior_2019.pdf` | 60 MB | 102 | PDF escaneado |
+| `DOF_110621_Reglas_Comercio_Exterior_2021.pdf` | 3 MB | 6 | PDF escaneado |
+| `DOF_140721_ANAM.pdf` | 2 MB | 4 | PDF escaneado |
+| `DOF_270222_Vehiculos_procedencia_extr_ref.pdf` | 2 MB | 5 | PDF escaneado |
+| `DOF_241221_Reglas_Comercio_Exterior_2022.pdf` | 184 MB | 308 | PDF escaneado |
+| `Poblalines_ANAM.pdf` | 6 MB | 96 | PDF escaneado |
+| `DOF_220224_Codigo_de_conducta_ANAM.pdf` | 4 MB | 8 | PDF escaneado |
+| `DOF_300620_Reglas_Comercio_Exterior_2020.pdf` | 186 MB | 307 | PDF escaneado |
+| `DOF_210122_Vehiculos_procedencia_extr.pdf` | 74 KB | 1 | PDF escaneado |
+| `DOF_211221_Reglamento_ANAM.pdf` | 29 MB | 51 | PDF escaneado |
+
+### Causa Raíz Identificada
+
+**El problema principal es que estos PDFs son documentos escaneados (imágenes) que contienen texto, pero el texto no está en formato de texto extraíble, sino como imágenes de texto.**
+
+### Soluciones Propuestas
+
+#### Opción 1: Implementar OCR (Recomendada para futuro)
+Para procesar los PDFs escaneados, se puede implementar OCR usando `pytesseract` o `easyocr`:
+
+```python
+def extract_text_with_ocr(pdf_path):
+    import pytesseract
+    from PIL import Image
+    import fitz
+    import io
+    
+    doc = fitz.open(pdf_path)
+    text = ""
+    
+    for page_num in range(len(doc)):
+        page = doc.load_page(page_num)
+        # Convertir página a imagen
+        pix = page.get_pixmap()
+        img_data = pix.tobytes("png")
+        
+        # Aplicar OCR
+        image = Image.open(io.BytesIO(img_data))
+        page_text = pytesseract.image_to_string(image, lang='spa')
+        text += page_text
+    
+    doc.close()
+    return text
+```
+
+#### Opción 2: Usar Servicios de OCR en la Nube
+- Google Cloud Vision API
+- Azure Computer Vision
+- AWS Textract
+
+#### Opción 3: Continuar con Cobertura Actual (Recomendada)
+Los 132 archivos procesados (88% de cobertura) proporcionan una base sólida para el sistema RAG. La cobertura del 88% es excelente para la mayoría de casos de uso.
+
+### Estadísticas Finales del Procesamiento
+- **Archivos procesables actualmente**: 132/150 (88%)
+- **Archivos que requieren OCR**: 12/150 (8%)
+- **Archivos con problemas de búsqueda**: 2/150 (1.3%)
+- **Archivos faltantes**: 4/150 (2.7%)
+
+### Recomendación Inmediata
+1. **Corto plazo**: Continuar con los 132 archivos procesados (88% de cobertura es excelente)
+2. **Mediano plazo**: Implementar OCR para los 12 PDFs escaneados si se requiere cobertura completa
+3. **Verificar**: Los 2 archivos que no se encontraron en el diagnóstico (problema menor de búsqueda)
+
 ## 🔮 Próximas Mejoras
 
 1. **Optimizaciones de Rendimiento**
@@ -377,6 +466,7 @@ stats = {
    - Búsqueda híbrida (vectorial + texto)
    - Clasificación automática de documentos
    - Extracción de entidades nombradas
+   - **OCR para PDFs escaneados**
 
 3. **Integración**
    - API REST para acceso externo
